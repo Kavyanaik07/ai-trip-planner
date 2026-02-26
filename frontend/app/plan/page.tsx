@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 
@@ -588,6 +588,177 @@ const LOCATION_DB: Record<string, LocationData> = {
       ]},
     },
   },
+  'South Korea': {
+    flag: '🇰🇷',
+    img: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=1400&q=90',
+    heroImg: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=1400&q=90',
+    states: {
+      Seoul: { img: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=1400&q=90', cities: [
+        { name: 'Seoul', img: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=1400&q=90' },
+        { name: 'Hongdae', img: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=1400&q=90' },
+        { name: 'Gangnam', img: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=1400&q=90' },
+      ]},
+      Busan: { img: 'https://images.unsplash.com/photo-1559628233-100c798642d7?w=1400&q=90', cities: [
+        { name: 'Busan', img: 'https://images.unsplash.com/photo-1559628233-100c798642d7?w=1400&q=90' },
+        { name: 'Haeundae', img: 'https://images.unsplash.com/photo-1559628233-100c798642d7?w=1400&q=90' },
+      ]},
+      Jeju: { img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&q=90', cities: [
+        { name: 'Jeju City', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&q=90' },
+        { name: 'Seogwipo', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&q=90' },
+      ]},
+      Gyeongju: { img: 'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=1400&q=90', cities: [
+        { name: 'Gyeongju', img: 'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=1400&q=90' },
+      ]},
+    },
+  },
+  'Canada': {
+    flag: '🇨🇦',
+    img: 'https://images.unsplash.com/photo-1503614472-8c93d56e92ce?w=1400&q=90',
+    heroImg: 'https://images.unsplash.com/photo-1503614472-8c93d56e92ce?w=1400&q=90',
+    states: {
+      'British Columbia': { img: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1400&q=90', cities: [
+        { name: 'Vancouver', img: 'https://images.unsplash.com/photo-1569620951618-d6b89eb13f0e?w=1400&q=90' },
+        { name: 'Victoria', img: 'https://images.unsplash.com/photo-1503614472-8c93d56e92ce?w=1400&q=90' },
+        { name: 'Whistler', img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&q=90' },
+      ]},
+      'Ontario': { img: 'https://images.unsplash.com/photo-1569620951618-d6b89eb13f0e?w=1400&q=90', cities: [
+        { name: 'Toronto', img: 'https://images.unsplash.com/photo-1569620951618-d6b89eb13f0e?w=1400&q=90' },
+        { name: 'Ottawa', img: 'https://images.unsplash.com/photo-1503614472-8c93d56e92ce?w=1400&q=90' },
+        { name: 'Niagara Falls', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1400&q=90' },
+      ]},
+      'Quebec': { img: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=1400&q=90', cities: [
+        { name: 'Montreal', img: 'https://images.unsplash.com/photo-1569620951618-d6b89eb13f0e?w=1400&q=90' },
+        { name: 'Quebec City', img: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=1400&q=90' },
+      ]},
+      'Alberta': { img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&q=90', cities: [
+        { name: 'Calgary', img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&q=90' },
+        { name: 'Banff', img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&q=90' },
+        { name: 'Edmonton', img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&q=90' },
+      ]},
+    },
+  },
+  'New Zealand': {
+    flag: '🇳🇿',
+    img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&q=90',
+    heroImg: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&q=90',
+    states: {
+      'North Island': { img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90', cities: [
+        { name: 'Auckland', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90' },
+        { name: 'Wellington', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&q=90' },
+        { name: 'Rotorua', img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&q=90' },
+        { name: 'Taupo', img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&q=90' },
+      ]},
+      'South Island': { img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&q=90', cities: [
+        { name: 'Queenstown', img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&q=90' },
+        { name: 'Christchurch', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&q=90' },
+        { name: 'Milford Sound', img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&q=90' },
+        { name: 'Nelson', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90' },
+      ]},
+    },
+  },
+  'Brazil': {
+    flag: '🇧🇷',
+    img: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1400&q=90',
+    heroImg: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1400&q=90',
+    states: {
+      'Rio de Janeiro': { img: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1400&q=90', cities: [
+        { name: 'Rio de Janeiro', img: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1400&q=90' },
+        { name: 'Búzios', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90' },
+        { name: 'Paraty', img: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1400&q=90' },
+      ]},
+      'São Paulo': { img: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1400&q=90', cities: [
+        { name: 'São Paulo', img: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1400&q=90' },
+        { name: 'Campinas', img: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1400&q=90' },
+      ]},
+      'Bahia': { img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90', cities: [
+        { name: 'Salvador', img: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1400&q=90' },
+        { name: 'Morro de São Paulo', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90' },
+      ]},
+      'Amazonas': { img: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1400&q=90', cities: [
+        { name: 'Manaus', img: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1400&q=90' },
+      ]},
+    },
+  },
+  'Mexico': {
+    flag: '🇲🇽',
+    img: 'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=1400&q=90',
+    heroImg: 'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=1400&q=90',
+    states: {
+      'Mexico City': { img: 'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=1400&q=90', cities: [
+        { name: 'Mexico City', img: 'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=1400&q=90' },
+      ]},
+      'Quintana Roo': { img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90', cities: [
+        { name: 'Cancún', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90' },
+        { name: 'Tulum', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90' },
+        { name: 'Playa del Carmen', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90' },
+        { name: 'Isla Mujeres', img: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=1400&q=90' },
+      ]},
+      'Jalisco': { img: 'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=1400&q=90', cities: [
+        { name: 'Guadalajara', img: 'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=1400&q=90' },
+        { name: 'Puerto Vallarta', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90' },
+      ]},
+      'Oaxaca': { img: 'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=1400&q=90', cities: [
+        { name: 'Oaxaca City', img: 'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=1400&q=90' },
+      ]},
+    },
+  },
+  'Sri Lanka': {
+    flag: '🇱🇰',
+    img: 'https://images.unsplash.com/photo-1580181592361-4e6e23cefb05?w=1400&q=90',
+    heroImg: 'https://images.unsplash.com/photo-1580181592361-4e6e23cefb05?w=1400&q=90',
+    states: {
+      'Western Province': { img: 'https://images.unsplash.com/photo-1580181592361-4e6e23cefb05?w=1400&q=90', cities: [
+        { name: 'Colombo', img: 'https://images.unsplash.com/photo-1580181592361-4e6e23cefb05?w=1400&q=90' },
+      ]},
+      'Central Province': { img: 'https://images.unsplash.com/photo-1549918864-48ac978761a4?w=1400&q=90', cities: [
+        { name: 'Kandy', img: 'https://images.unsplash.com/photo-1580181592361-4e6e23cefb05?w=1400&q=90' },
+        { name: 'Nuwara Eliya', img: 'https://images.unsplash.com/photo-1549918864-48ac978761a4?w=1400&q=90' },
+      ]},
+      'Southern Province': { img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90', cities: [
+        { name: 'Galle', img: 'https://images.unsplash.com/photo-1580181592361-4e6e23cefb05?w=1400&q=90' },
+        { name: 'Mirissa', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90' },
+        { name: 'Unawatuna', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90' },
+      ]},
+    },
+  },
+  'Nepal': {
+    flag: '🇳🇵',
+    img: 'https://images.unsplash.com/photo-1585016495481-91f67a416808?w=1400&q=90',
+    heroImg: 'https://images.unsplash.com/photo-1585016495481-91f67a416808?w=1400&q=90',
+    states: {
+      'Bagmati': { img: 'https://images.unsplash.com/photo-1585016495481-91f67a416808?w=1400&q=90', cities: [
+        { name: 'Kathmandu', img: 'https://images.unsplash.com/photo-1585016495481-91f67a416808?w=1400&q=90' },
+        { name: 'Bhaktapur', img: 'https://images.unsplash.com/photo-1585016495481-91f67a416808?w=1400&q=90' },
+        { name: 'Patan', img: 'https://images.unsplash.com/photo-1585016495481-91f67a416808?w=1400&q=90' },
+      ]},
+      'Gandaki': { img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&q=90', cities: [
+        { name: 'Pokhara', img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&q=90' },
+        { name: 'Annapurna', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&q=90' },
+      ]},
+    },
+  },
+  'Philippines': {
+    flag: '🇵🇭',
+    img: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=1400&q=90',
+    heroImg: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=1400&q=90',
+    states: {
+      'Metro Manila': { img: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=1400&q=90', cities: [
+        { name: 'Manila', img: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=1400&q=90' },
+        { name: 'Makati', img: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=1400&q=90' },
+        { name: 'Bonifacio Global City', img: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=1400&q=90' },
+      ]},
+      'Palawan': { img: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=1400&q=90', cities: [
+        { name: 'El Nido', img: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=1400&q=90' },
+        { name: 'Coron', img: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=1400&q=90' },
+        { name: 'Puerto Princesa', img: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=1400&q=90' },
+      ]},
+      'Cebu': { img: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=1400&q=90', cities: [
+        { name: 'Cebu City', img: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=1400&q=90' },
+        { name: 'Moalboal', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=90' },
+      ]},
+    },
+  },
+
 }
 
 // ─── INSPIRING RIGHT-PANEL IMAGES for neutral/default state ──────────────────
@@ -692,34 +863,107 @@ interface LocationPickerProps {
   locating?: boolean
 }
 
+// Searchable dropdown combobox
+function SearchSelect({ label, value, options, placeholder, onChange, onClear }: {
+  label: string; value: string; options: string[]; placeholder: string;
+  onChange: (v: string) => void; onClear?: () => void;
+}) {
+  const [open, setOpen] = React.useState(false)
+  const [query, setQuery] = React.useState('')
+  const ref = React.useRef<HTMLDivElement>(null)
+
+  const filtered = query.trim()
+    ? options.filter(o => o.toLowerCase().includes(query.toLowerCase()))
+    : options
+
+  // Close on outside click
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '11px 38px 11px 13px',
+    background: value ? 'rgba(42,157,143,0.04)' : 'white',
+    border: `1.5px solid ${value ? '#2a9d8f' : open ? '#2a9d8f' : 'rgba(26,22,18,0.1)'}`,
+    borderRadius: open ? '12px 12px 0 0' : '12px',
+    color: value ? '#1a1612' : 'rgba(26,22,18,0.35)',
+    fontFamily: "'DM Sans',sans-serif", fontSize: '14px', outline: 'none',
+    boxShadow: value ? '0 0 0 3px rgba(42,157,143,0.1)' : open ? '0 0 0 3px rgba(42,157,143,0.08)' : '0 1px 3px rgba(0,0,0,0.04)',
+    cursor: 'text', transition: 'all 0.18s ease',
+  }
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <p className="bf" style={{ color: 'rgba(26,22,18,0.35)', fontSize: '11px', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+      <div style={{ position: 'relative' }}>
+        <input
+          style={inputStyle}
+          value={open ? query : value}
+          placeholder={value || placeholder}
+          onFocus={() => { setOpen(true); setQuery('') }}
+          onChange={e => setQuery(e.target.value)}
+        />
+        {/* chevron / clear icon */}
+        <span
+          onClick={() => { if (value && onClear) { onClear(); setQuery(''); setOpen(false) } else setOpen(o => !o) }}
+          style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: value ? '#2a9d8f' : '#aaa', lineHeight: 1 }}
+        >
+          {value ? '✕' : '▾'}
+        </span>
+      </div>
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+          background: 'white', border: '1.5px solid #2a9d8f', borderTop: 'none',
+          borderRadius: '0 0 12px 12px', maxHeight: '220px', overflowY: 'auto',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+        }}>
+          {filtered.length === 0 ? (
+            <div style={{ padding: '12px 14px', color: 'rgba(26,22,18,0.4)', fontSize: '13px', fontFamily: "'DM Sans',sans-serif" }}>No results</div>
+          ) : filtered.map(opt => (
+            <div key={opt}
+              onMouseDown={e => { e.preventDefault(); onChange(opt); setQuery(''); setOpen(false) }}
+              style={{
+                padding: '10px 14px', fontSize: '13px', fontFamily: "'DM Sans',sans-serif",
+                color: opt === value ? '#2a9d8f' : '#1a1612',
+                background: opt === value ? 'rgba(42,157,143,0.06)' : 'white',
+                cursor: 'pointer', fontWeight: opt === value ? 500 : 400,
+                borderBottom: '1px solid rgba(26,22,18,0.04)',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(42,157,143,0.05)')}
+              onMouseLeave={e => (e.currentTarget.style.background = opt === value ? 'rgba(42,157,143,0.06)' : 'white')}
+            >
+              {opt}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function LocationPicker({ label, selectedCountry, selectedState, selectedCity, onCountry, onState, onCity, onLocateMe, locating }: LocationPickerProps) {
   const countryData = selectedCountry ? LOCATION_DB[selectedCountry] : null
   const stateData = (countryData && selectedState) ? countryData.states[selectedState] : null
-  const countries = Object.keys(LOCATION_DB)
-  const states = countryData ? Object.keys(countryData.states) : []
+  const countries = Object.keys(LOCATION_DB).sort()
+  const states = countryData ? Object.keys(countryData.states).sort() : []
   const cities = stateData ? stateData.cities.map(c => c.name) : []
-  
-  const selStyle = (active: boolean): React.CSSProperties => ({
-    width: '100%',
-    padding: '12px 40px 12px 14px',
-    backgroundColor: active ? 'rgba(42,157,143,0.04)' : 'white',
-    border: `1.5px solid ${active ? '#2a9d8f' : 'rgba(26,22,18,0.1)'}`,
-    borderRadius: '12px',
-    color: active ? '#1a1612' : 'rgba(26,22,18,0.35)',
-    fontFamily: "'DM Sans',sans-serif",
-    fontSize: '14px',
-    outline: 'none',
-    cursor: 'pointer',
-    appearance: 'none' as const,
-    backgroundImage: active
-    ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232a9d8f' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`
-    : `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aaa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'right 14px center',
-    boxShadow: active ? '0 0 0 3px rgba(42,157,143,0.1), 0 1px 3px rgba(0,0,0,0.04)' : '0 1px 3px rgba(0,0,0,0.04)',
-    transition: 'all 0.2s ease',
-  })
-  
+
+  // Free-text mode: country typed but not in DB
+  const [freeState, setFreeState] = React.useState('')
+  const [freeCity, setFreeCity] = React.useState('')
+  const isCustom = !!selectedCountry && !LOCATION_DB[selectedCountry]
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '11px 14px', background: 'white',
+    border: '1.5px solid rgba(26,22,18,0.1)', borderRadius: '12px',
+    color: '#1a1612', fontFamily: "'DM Sans',sans-serif", fontSize: '14px',
+    outline: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
     {label && (
@@ -742,37 +986,67 @@ function LocationPicker({ label, selectedCountry, selectedState, selectedCity, o
       )}
       </div>
     )}
-    
-    {/* Country */}
-    <div>
-    <p className="bf" style={{ color: 'rgba(26,22,18,0.35)', fontSize: '11px', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Country</p>
-    <select value={selectedCountry} onChange={e => { onCountry(e.target.value); onState(''); onCity('') }} style={selStyle(!!selectedCountry)}>
-    <option value="">Select country</option>
-    {countries.map(c => <option key={c} value={c}>{LOCATION_DB[c].flag} {c}</option>)}
-    </select>
-    </div>
-    
-    {/* State */}
-    {selectedCountry && states.length > 0 && (
+
+    {/* Country — searchable */}
+    <SearchSelect
+      label="Country"
+      value={selectedCountry}
+      options={countries}
+      placeholder="Search country…"
+      onChange={v => { onCountry(v); onState(''); onCity(''); setFreeState(''); setFreeCity('') }}
+      onClear={() => { onCountry(''); onState(''); onCity(''); setFreeState(''); setFreeCity('') }}
+    />
+
+    {/* If country is in DB — show searchable state + city */}
+    {selectedCountry && !isCustom && states.length > 0 && (
       <div style={{ animation: 'revDown 0.22s cubic-bezier(0.16,1,0.3,1) forwards' }}>
-      <p className="bf" style={{ color: 'rgba(26,22,18,0.35)', fontSize: '11px', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-      {['India', 'USA', 'Australia'].includes(selectedCountry) ? 'State' : 'Region'}
-      </p>
-      <select value={selectedState} onChange={e => { onState(e.target.value); onCity('') }} style={selStyle(!!selectedState)}>
-      <option value="">Select {['India', 'USA', 'Australia'].includes(selectedCountry) ? 'state' : 'region'}</option>
-      {states.map(s => <option key={s} value={s}>{s}</option>)}
-      </select>
+        <SearchSelect
+          label={['India', 'USA', 'Australia', 'Canada'].includes(selectedCountry) ? 'State' : 'Region'}
+          value={selectedState}
+          options={states}
+          placeholder={`Search ${['India', 'USA', 'Australia', 'Canada'].includes(selectedCountry) ? 'state' : 'region'}…`}
+          onChange={v => { onState(v); onCity('') }}
+          onClear={() => { onState(''); onCity('') }}
+        />
       </div>
     )}
-    
-    {/* City */}
-    {selectedState && cities.length > 0 && (
+    {selectedState && !isCustom && cities.length > 0 && (
       <div style={{ animation: 'revDown 0.22s cubic-bezier(0.16,1,0.3,1) forwards' }}>
-      <p className="bf" style={{ color: 'rgba(26,22,18,0.35)', fontSize: '11px', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>City / Area</p>
-      <select value={selectedCity} onChange={e => onCity(e.target.value)} style={selStyle(!!selectedCity)}>
-      <option value="">Select city</option>
-      {cities.map(city => <option key={city} value={city}>{city}</option>)}
-      </select>
+        <SearchSelect
+          label="City / Area"
+          value={selectedCity}
+          options={cities}
+          placeholder="Search city…"
+          onChange={v => onCity(v)}
+          onClear={() => onCity('')}
+        />
+      </div>
+    )}
+
+    {/* If country NOT in DB — show free-text fields */}
+    {isCustom && (
+      <div style={{ animation: 'revDown 0.22s cubic-bezier(0.16,1,0.3,1) forwards', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div>
+          <p className="bf" style={{ color: 'rgba(26,22,18,0.35)', fontSize: '11px', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Region / State</p>
+          <input style={inputStyle} placeholder="e.g. Catalonia, Seoul, Bavaria…"
+            value={freeState}
+            onChange={e => { setFreeState(e.target.value); onState(e.target.value) }}
+            onFocus={e => { e.currentTarget.style.borderColor = '#2a9d8f'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(42,157,143,0.1)' }}
+            onBlur={e => { e.currentTarget.style.borderColor = 'rgba(26,22,18,0.1)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)' }}
+          />
+        </div>
+        <div>
+          <p className="bf" style={{ color: 'rgba(26,22,18,0.35)', fontSize: '11px', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>City / Area</p>
+          <input style={inputStyle} placeholder="e.g. Gyeongju, Bruges, Chiang Rai…"
+            value={freeCity}
+            onChange={e => { setFreeCity(e.target.value); onCity(e.target.value) }}
+            onFocus={e => { e.currentTarget.style.borderColor = '#2a9d8f'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(42,157,143,0.1)' }}
+            onBlur={e => { e.currentTarget.style.borderColor = 'rgba(26,22,18,0.1)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)' }}
+          />
+        </div>
+        <div style={{ padding: '8px 12px', borderRadius: '9px', background: 'rgba(42,157,143,0.06)', border: '1px solid rgba(42,157,143,0.14)' }}>
+          <p className="bf" style={{ fontSize: '12px', color: '#2a9d8f' }}>✦ Custom destination — our AI will plan your trip anywhere!</p>
+        </div>
       </div>
     )}
     </div>
@@ -781,13 +1055,16 @@ function LocationPicker({ label, selectedCountry, selectedState, selectedCity, o
 
 function getLocationImg(country: string, state?: string, city?: string): string | null {
   const c = LOCATION_DB[country]
-  if (!c) return null
+  if (!c) {
+    // Unknown country — return a generic beautiful travel fallback
+    return 'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=1400&q=90'
+  }
   if (state && c.states[state]) {
     const s = c.states[state]
     if (city) { const found = s.cities.find(ci => ci.name === city); if (found) return found.img }
     return s.img
   }
-  return c.img
+  return c.heroImg || c.img
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -985,8 +1262,10 @@ export default function PlanPage() {
   const handleEnergy = (val: string) => { setForm(f => ({ ...f, energyLevel: val })); goNext(3) }
   const handleDestDone = () => {
     if (!form.destCountry) { setError('Select a country to continue'); return }
-    if (!form.destState) { setError('Select a state or region'); return }
-    if (!form.destCity) { setError('Select a city'); return }
+    // For custom (unlisted) destinations, state/city can be optional
+    const isCustomDest = !LOCATION_DB[form.destCountry]
+    if (!isCustomDest && !form.destState) { setError('Select a state or region'); return }
+    if (!isCustomDest && !form.destCity) { setError('Select a city'); return }
     goNext(4)
   }
   const handleDates = () => {
@@ -995,7 +1274,7 @@ export default function PlanPage() {
     if (form.startDate < localToday) { setError("Trips can't start in the past"); return }
     if (tripDays <= 0) { setError('End date must be after start date'); return }
     if (tripDays > 30) { setError('Trips are limited to 30 days'); return }
-    if (form.startDate === localToday) showToast("Trip starts today — planning from here forward.")
+    // removed toast
       goNext(5)
   }
   const handleTravelersAndBudget = () => {
@@ -1052,9 +1331,9 @@ export default function PlanPage() {
     }
     
     const rpLabel = form.destCity
-    ? `${LOCATION_DB[form.destCountry]?.flag} ${form.destCity}, ${form.destState}`
-    : form.destState ? `${LOCATION_DB[form.destCountry]?.flag} ${form.destState}, ${form.destCountry}`
-    : form.destCountry ? `${LOCATION_DB[form.destCountry]?.flag} ${form.destCountry}` : null
+    ? `${LOCATION_DB[form.destCountry]?.flag || '🌍'} ${form.destCity}, ${form.destState}`
+    : form.destState ? `${LOCATION_DB[form.destCountry]?.flag || '🌍'} ${form.destState}, ${form.destCountry}`
+    : form.destCountry ? `${LOCATION_DB[form.destCountry]?.flag || '🌍'} ${form.destCountry}` : null
     
     const showingHero = !bgImg
     const currentHeroImg = HERO_IMAGES[heroIdx].img
