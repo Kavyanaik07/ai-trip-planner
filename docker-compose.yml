@@ -1,0 +1,85 @@
+version: '3.9'
+
+services:
+  # ── Postgres ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: wandr_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       tripplanner
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: wandr_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── AI Service (FastAPI) ──────────────────────────────────────────────────
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: wandr_ai_service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      REDIS_URL:         redis://redis:6379
+      INTERNAL_SECRET:   ${AI_SERVICE_SECRET}
+      ENVIRONMENT:       development
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./ai-service:/app
+
+  # ── Next.js Frontend ──────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: wandr_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL:       postgresql://postgres:password@postgres:5432/tripplanner
+      REDIS_URL:          redis://redis:6379
+      NEXTAUTH_URL:       http://localhost:3000
+      NEXTAUTH_SECRET:    ${NEXTAUTH_SECRET}
+      GOOGLE_CLIENT_ID:   ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_MAPS_API_KEY:  ${GOOGLE_MAPS_API_KEY}
+      AI_SERVICE_URL:     http://ai-service:8000
+      AI_SERVICE_SECRET:  ${AI_SERVICE_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+volumes:
+  postgres_data:
+  redis_data:
