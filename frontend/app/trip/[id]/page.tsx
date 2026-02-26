@@ -116,12 +116,10 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
     if (!editForm || !trip) return
     setRegenerate(true)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8000'}/generate-itinerary`, {
+      // ✅ Call Next.js API route (not AI service directly — avoids CORS)
+      const res = await fetch(`/api/trips/${id}/itinerary/generate`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-Secret': 'abc123',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           destination: trip.destination,
           startDate: editForm.startDate,
@@ -138,12 +136,7 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
         }),
       })
       const newItin = await res.json()
-      if (newItin.error) throw new Error(newItin.error)
-
-      // Save updated itinerary to supabase
-      await supabase
-        .from('itineraries')
-        .upsert({ trip_id: id, ...newItin, updated_at: new Date().toISOString() })
+      if (!res.ok || newItin.error) throw new Error(newItin.error || 'Generation failed')
 
       // Update trip dates/travelers if changed
       await supabase
@@ -165,7 +158,7 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
     } finally {
       setRegenerate(false)
     }
-   }
+  }
 
   const scrollToDay = (i: number) => {
     dayRefs.current[i]?.scrollIntoView({
