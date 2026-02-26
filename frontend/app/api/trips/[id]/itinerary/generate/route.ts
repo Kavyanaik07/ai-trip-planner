@@ -8,10 +8,10 @@ const supabase = createClient(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }  // ← Promise type (Next.js 16)
 ) {
   try {
-    const { id } = params
+    const { id } = await params  // ← must await
     const body = await request.json()
 
     // Call AI service to generate itinerary
@@ -19,7 +19,7 @@ export async function POST(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Internal-Secret': process.env.AI_SERVICE_SECRET || 'abc123',
+        'X-Internal-Secret': process.env.AI_SERVICE_SECRET || '',
       },
       body: JSON.stringify(body),
     })
