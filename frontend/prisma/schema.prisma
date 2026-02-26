@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../app/generated/prisma"
@@ -11,5 +8,49 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String      @id @default(uuid())
+  email      String      @unique
+  name       String?
+  image      String?
+  created_at DateTime    @default(now())
+  trips      Trip[]
+
+  @@map("users")
+}
+
+model Trip {
+  id           String      @id @default(uuid())
+  user_id      String?
+  destination  String
+  start_date   DateTime    @db.Date
+  end_date     DateTime    @db.Date
+  travelers    Int         @default(1)
+  budget       Decimal?
+  currency     String      @default("USD")
+  interests    String[]
+  travel_style String?
+  status       String      @default("draft")
+  created_at   DateTime    @default(now())
+  user         User?       @relation(fields: [user_id], references: [id])
+  itineraries  Itinerary[]
+
+  @@map("trips")
+}
+
+model Itinerary {
+  id             String   @id @default(uuid())
+  trip_id        String
+  destination    String
+  total_days     Int
+  summary        String?
+  estimated_cost Decimal?
+  currency       String   @default("USD")
+  days           Json
+  created_at     DateTime @default(now())
+  trip           Trip     @relation(fields: [trip_id], references: [id])
+
+  @@map("itineraries")
 }
