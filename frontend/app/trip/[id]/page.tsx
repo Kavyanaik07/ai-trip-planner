@@ -53,6 +53,12 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
   const [reviewRating, setReviewRating] = useState(5)
   const [reviewSubmitting, setReviewSubmitting] = useState(false)
   const [reviewDone, setReviewDone] = useState(false)
+  // ── Chat state
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatMessages, setChatMessages] = useState<{role:'user'|'assistant', content:string}[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatLoading, setChatLoading] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement>(null)
   const [regenerating, setRegenerate] = useState(false)
   const dayRefs = useRef<(HTMLDivElement | null)[]>([])
   const containerRef = useRef<HTMLDivElement>(null)
@@ -196,6 +202,40 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
       alert(err.message || 'Could not submit review')
     } finally {
       setReviewSubmitting(false)
+    }
+  }
+
+  const sendChat = async () => {
+    const msg = chatInput.trim()
+    if (!msg || chatLoading) return
+    const newMessages = [...chatMessages, { role: 'user' as const, content: msg }]
+    setChatMessages(newMessages)
+    setChatInput('')
+    setChatLoading(true)
+    try {
+      const res = await fetch(`/api/trips/${id}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: msg,
+          trip_context: {
+            destination: trip?.destination || '',
+            startDate: trip?.startDate || trip?.start_date || '',
+            endDate: trip?.endDate || trip?.end_date || '',
+            travelers: trip?.travelers || 1,
+            currency: trip?.currency || 'USD',
+          },
+          current_itinerary: itinerary,
+          history: chatMessages.slice(-10),
+        }),
+      })
+      const data = await res.json()
+      setChatMessages(prev => [...prev, { role: 'assistant', content: data.response || 'Sorry, something went wrong.' }])
+    } catch {
+      setChatMessages(prev => [...prev, { role: 'assistant', content: 'Could not connect. Make sure the AI service is running.' }])
+    } finally {
+      setChatLoading(false)
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
     }
   }
 
@@ -437,6 +477,15 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
           transition: all 0.2s;
         }
         .edit-cancel:hover { background: rgba(26,22,18,0.04); color: rgba(26,22,18,0.7); }
+        .chat-bubble{position:fixed;bottom:28px;right:28px;z-index:150;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#2a9d8f,#1a6a63);border:none;cursor:pointer;box-shadow:0 8px 28px rgba(42,157,143,0.38);display:flex;align-items:center;justify-content:center;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.25s ease;color:white;}
+        .chat-bubble:hover{transform:scale(1.12);box-shadow:0 12px 36px rgba(42,157,143,0.45);}
+        .chat-panel{position:fixed;bottom:92px;right:28px;z-index:150;width:360px;background:white;border-radius:20px;box-shadow:0 24px 64px rgba(0,0,0,0.18);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(0,0,0,0.07);}
+        .chat-msg-user{align-self:flex-end;background:linear-gradient(135deg,#2a9d8f,#1a6a63);color:white;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:80%;font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.6;}
+        .chat-msg-ai{align-self:flex-start;background:#f3f0eb;color:#1a1612;border-radius:16px 16px 16px 4px;padding:10px 14px;max-width:85%;font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.6;}
+        .chat-input{flex:1;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:14px;color:#1a1612;background:transparent;padding:0;}
+        .chat-input::placeholder{color:rgba(26,22,18,0.3);}
+        @keyframes chatIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .chat-anim{animation:chatIn 0.2s cubic-bezier(0.16,1,0.3,1) forwards;}
         .trip-action-btn {
           font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
           color: rgba(26,22,18,0.45); background: none; border: 1px solid rgba(26,22,18,0.1);
@@ -472,6 +521,73 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
           <button className="trip-action-btn" onClick={() => { setReviewModal(true); setReviewDone(false) }} style={{ color: '#2a9d8f', borderColor: 'rgba(42,157,143,0.3)' }}>★ Leave a review</button>
         </div>
       </nav>
+
+      {/* ── FLOATING CHAT BUBBLE ── */}
+      <button className="chat-bubble" onClick={() => setChatOpen(o => !o)} title="Ask about your trip">
+        {chatOpen ? (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        ) : (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        )}
+        {!chatOpen && chatMessages.length === 0 && (
+          <span style={{ position:'absolute', top:'-2px', right:'-2px', width:'10px', height:'10px', borderRadius:'50%', background:'#f59e0b', border:'2px solid white' }} />
+        )}
+      </button>
+
+      {/* ── CHAT PANEL ── */}
+      {chatOpen && (
+        <div className="chat-panel">
+          {/* Header */}
+          <div style={{ padding:'16px 18px', borderBottom:'1px solid rgba(0,0,0,0.07)', display:'flex', alignItems:'center', gap:'10px', background:'linear-gradient(135deg,#2a9d8f,#1a6a63)' }}>
+            <div style={{ width:'32px', height:'32px', borderRadius:'50%', background:'rgba(255,255,255,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'16px' }}>✦</div>
+            <div>
+              <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'14px', fontWeight:600, color:'white', margin:0 }}>Trip Assistant</p>
+              <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', color:'rgba(255,255,255,0.7)', margin:0 }}>{trip?.destination?.split(',')[0]}</p>
+            </div>
+          </div>
+
+          {/* Messages */}
+          <div style={{ flex:1, overflowY:'auto', padding:'16px', display:'flex', flexDirection:'column', gap:'10px', minHeight:'200px', maxHeight:'340px' }}>
+            {chatMessages.length === 0 && (
+              <div style={{ textAlign:'center', padding:'20px 0' }}>
+                <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'13px', color:'rgba(26,22,18,0.4)', marginBottom:'12px' }}>Ask anything about your trip</p>
+                {['Best local food to try?', 'What to pack?', 'Hidden gems nearby?'].map(q => (
+                  <button key={q} onClick={() => { setChatInput(q) }}
+                    style={{ display:'block', width:'100%', textAlign:'left', padding:'8px 12px', marginBottom:'6px', background:'rgba(42,157,143,0.06)', border:'1px solid rgba(42,157,143,0.15)', borderRadius:'10px', fontFamily:"'DM Sans',sans-serif", fontSize:'12px', color:'#2a9d8f', cursor:'pointer' }}>
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+            {chatMessages.map((m, i) => (
+              <div key={i} className={`${m.role === 'user' ? 'chat-msg-user' : 'chat-msg-ai'} chat-anim`}>
+                {m.content}
+              </div>
+            ))}
+            {chatLoading && (
+              <div className="chat-msg-ai chat-anim" style={{ display:'flex', gap:'5px', alignItems:'center', padding:'12px 14px' }}>
+                {[0,1,2].map(i => <span key={i} style={{ width:'6px', height:'6px', borderRadius:'50%', background:'rgba(26,22,18,0.25)', display:'inline-block', animation:`pulse 1.2s ease-in-out ${i*0.2}s infinite` }} />)}
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          {/* Input */}
+          <div style={{ padding:'12px 14px', borderTop:'1px solid rgba(0,0,0,0.07)', display:'flex', alignItems:'center', gap:'8px', background:'#faf8f4' }}>
+            <input
+              className="chat-input"
+              placeholder="Ask about your trip…"
+              value={chatInput}
+              onChange={e => setChatInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat() } }}
+            />
+            <button onClick={sendChat} disabled={!chatInput.trim() || chatLoading}
+              style={{ width:'34px', height:'34px', borderRadius:'50%', background: chatInput.trim() ? '#1a1612' : 'rgba(26,22,18,0.1)', border:'none', cursor: chatInput.trim() ? 'pointer' : 'not-allowed', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'background 0.18s' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={chatInput.trim() ? 'white' : 'rgba(26,22,18,0.3)'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── REVIEW MODAL ── */}
       {reviewModal && (
