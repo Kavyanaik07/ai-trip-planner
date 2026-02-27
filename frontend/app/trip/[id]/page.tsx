@@ -48,6 +48,11 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
   const [activeDay, setActiveDay] = useState(0)
   const [editModal, setEditModal] = useState(false)
   const [editForm, setEditForm] = useState<any>(null)
+  const [reviewModal, setReviewModal] = useState(false)
+  const [reviewText, setReviewText] = useState('')
+  const [reviewRating, setReviewRating] = useState(5)
+  const [reviewSubmitting, setReviewSubmitting] = useState(false)
+  const [reviewDone, setReviewDone] = useState(false)
   const [regenerating, setRegenerate] = useState(false)
   const dayRefs = useRef<(HTMLDivElement | null)[]>([])
   const containerRef = useRef<HTMLDivElement>(null)
@@ -116,10 +121,12 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
     if (!editForm || !trip) return
     setRegenerate(true)
     try {
-      // ✅ Call Next.js API route (not AI service directly — avoids CORS)
-      const res = await fetch(`/api/trips/${id}/itinerary/generate`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8000'}/generate-itinerary`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Secret': 'abc123',
+        },
         body: JSON.stringify({
           destination: trip.destination,
           startDate: editForm.startDate,
@@ -136,7 +143,12 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
         }),
       })
       const newItin = await res.json()
-      if (!res.ok || newItin.error) throw new Error(newItin.error || 'Generation failed')
+      if (newItin.error) throw new Error(newItin.error)
+
+      // Save updated itinerary to supabase
+      await supabase
+        .from('itineraries')
+        .upsert({ trip_id: id, ...newItin, updated_at: new Date().toISOString() })
 
       // Update trip dates/travelers if changed
       await supabase
@@ -157,6 +169,33 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
       alert('Regeneration failed. Please try again.')
     } finally {
       setRegenerate(false)
+    }
+   }
+
+  const submitReview = async () => {
+    if (!session?.user || !reviewText.trim() || reviewText.trim().length < 10) return
+    setReviewSubmitting(true)
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_name: session.user.name,
+          user_email: session.user.email,
+          user_image: session.user.image,
+          destination: trip?.destination || '',
+          review_text: reviewText.trim(),
+          rating: reviewRating,
+          trip_id: id,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed')
+      setReviewDone(true)
+    } catch (err: any) {
+      alert(err.message || 'Could not submit review')
+    } finally {
+      setReviewSubmitting(false)
     }
   }
 
@@ -430,8 +469,59 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button className="trip-action-btn" onClick={openEdit}>✎ Edit & regenerate</button>
           <Link href={`/trip/${id}/print`} target="_blank" className="trip-action-btn">↓ Export PDF</Link>
+          <button className="trip-action-btn" onClick={() => { setReviewModal(true); setReviewDone(false) }} style={{ color: '#2a9d8f', borderColor: 'rgba(42,157,143,0.3)' }}>★ Leave a review</button>
         </div>
       </nav>
+
+      {/* ── REVIEW MODAL ── */}
+      {reviewModal && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(6px)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:'24px' }}>
+          <div style={{ background:'white', borderRadius:'24px', padding:'36px', maxWidth:'460px', width:'100%', boxShadow:'0 32px 80px rgba(0,0,0,0.2)' }}>
+            {reviewDone ? (
+              <div style={{ textAlign:'center', padding:'20px 0' }}>
+                <div style={{ fontSize:'48px', marginBottom:'16px' }}>🎉</div>
+                <h3 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'24px', fontWeight:700, color:'#1a1612', marginBottom:'8px' }}>Thank you!</h3>
+                <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'14px', color:'rgba(26,22,18,0.5)', marginBottom:'24px' }}>Your review helps other travellers plan better trips.</p>
+                <button onClick={() => setReviewModal(false)} style={{ padding:'11px 28px', background:'#1a1612', color:'white', border:'none', borderRadius:'100px', fontFamily:"'DM Sans',sans-serif", fontSize:'14px', cursor:'pointer' }}>Close</button>
+              </div>
+            ) : (
+              <>
+                <h3 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'22px', fontWeight:700, color:'#1a1612', marginBottom:'4px' }}>How was your trip to {trip?.destination?.split(',')[0]}?</h3>
+                <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'13px', color:'rgba(26,22,18,0.45)', marginBottom:'24px' }}>Your honest review helps others plan better.</p>
+                <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', textTransform:'uppercase', letterSpacing:'0.08em', color:'rgba(26,22,18,0.4)', marginBottom:'8px' }}>Rating</p>
+                <div style={{ display:'flex', gap:'6px', marginBottom:'20px' }}>
+                  {[1,2,3,4,5].map(star => (
+                    <button key={star} onClick={() => setReviewRating(star)}
+                      style={{ background:'none', border:'none', cursor:'pointer', fontSize:'28px', color: star <= reviewRating ? '#f59e0b' : 'rgba(26,22,18,0.15)', transition:'color 0.15s, transform 0.15s', transform: star <= reviewRating ? 'scale(1.1)' : 'scale(1)' }}>
+                      ★
+                    </button>
+                  ))}
+                </div>
+                <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'11px', textTransform:'uppercase', letterSpacing:'0.08em', color:'rgba(26,22,18,0.4)', marginBottom:'8px' }}>Your experience</p>
+                <textarea
+                  value={reviewText}
+                  onChange={e => setReviewText(e.target.value)}
+                  placeholder="What did you love? What surprised you? Was the itinerary realistic?..."
+                  rows={4}
+                  style={{ width:'100%', padding:'12px 14px', border:'1.5px solid rgba(26,22,18,0.1)', borderRadius:'12px', fontFamily:"'DM Sans',sans-serif", fontSize:'14px', color:'#1a1612', outline:'none', resize:'none', boxSizing:'border-box' }}
+                  onFocus={e => e.currentTarget.style.borderColor = '#2a9d8f'}
+                  onBlur={e => e.currentTarget.style.borderColor = 'rgba(26,22,18,0.1)'}
+                />
+                {reviewText.trim().length > 0 && reviewText.trim().length < 10 && (
+                  <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'12px', color:'#dc2626', marginTop:'4px' }}>Please write at least 10 characters</p>
+                )}
+                <div style={{ display:'flex', gap:'10px', marginTop:'20px' }}>
+                  <button onClick={() => setReviewModal(false)} style={{ flex:1, padding:'11px', background:'none', border:'1.5px solid rgba(26,22,18,0.1)', borderRadius:'100px', fontFamily:"'DM Sans',sans-serif", fontSize:'14px', cursor:'pointer', color:'rgba(26,22,18,0.5)' }}>Cancel</button>
+                  <button onClick={submitReview} disabled={reviewSubmitting || reviewText.trim().length < 10}
+                    style={{ flex:2, padding:'11px', background: reviewText.trim().length >= 10 ? '#1a1612' : 'rgba(26,22,18,0.1)', color: reviewText.trim().length >= 10 ? 'white' : 'rgba(26,22,18,0.3)', border:'none', borderRadius:'100px', fontFamily:"'DM Sans',sans-serif", fontSize:'14px', fontWeight:500, cursor: reviewText.trim().length >= 10 ? 'pointer' : 'not-allowed', transition:'all 0.2s' }}>
+                    {reviewSubmitting ? 'Submitting…' : 'Submit review ✦'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── EDIT MODAL ── */}
       {editModal && editForm && (

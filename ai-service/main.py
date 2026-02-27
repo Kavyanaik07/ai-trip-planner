@@ -13,9 +13,13 @@ load_dotenv()
 
 app = FastAPI(title="thisWay AI Service")
 
+# CORS origins: comma-separated in ALLOWED_ORIGINS env var, falls back to localhost
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
+ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -194,7 +198,7 @@ Return ONLY valid JSON, no markdown, no extra text:
 
     try:
         response = client.models.generate_content(
-            model="gemini-flash-latest",
+            model="gemini-2.0-flash",
             contents=prompt
         )
 
@@ -244,7 +248,7 @@ Reply helpfully and concisely. Use {currency} for any costs."""
 
     try:
         response = client.models.generate_content(
-            model="gemini-flash-latest",
+            model="gemini-2.0-flash",
             contents=prompt
         )
         return {

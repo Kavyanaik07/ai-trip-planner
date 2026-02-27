@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
@@ -123,7 +124,65 @@ function Wordmark({ size = 24, light = false }: { size?: number; light?: boolean
   )
 }
 
+function ReviewCard({ review: r, delay }: { review: any; delay: number }) {
+  const [expanded, setExpanded] = React.useState(false)
+  const LIMIT = 160
+  const isLong = r.review_text.length > LIMIT
+
+  return (
+    <Reveal delay={delay}>
+    <div className="tcard" style={{ height: 'auto', minHeight: '220px', cursor: isLong ? 'pointer' : 'default' }}
+      onClick={() => isLong && setExpanded(e => !e)}>
+      {/* Stars */}
+      <div style={{ display:'flex', gap:'2px', marginBottom:'10px' }}>
+        {[1,2,3,4,5].map(s => (
+          <span key={s} style={{ fontSize:'13px', color: s <= r.rating ? '#f59e0b' : 'rgba(26,22,18,0.15)' }}>★</span>
+        ))}
+      </div>
+
+      {/* Review text */}
+      <p className="bf" style={{ color:'rgba(26,22,18,0.7)', fontSize:'14px', lineHeight:1.75, fontWeight:300, fontStyle:'italic', flex:1 }}>
+        "{expanded || !isLong ? r.review_text : r.review_text.slice(0, LIMIT).trimEnd() + '…'}"
+      </p>
+
+      {/* Read more / less */}
+      {isLong && (
+        <button style={{ background:'none', border:'none', padding:'6px 0 0', fontFamily:"'DM Sans',sans-serif", fontSize:'12px', fontWeight:500, color:'#2a9d8f', cursor:'pointer', textAlign:'left' }}>
+          {expanded ? '↑ Show less' : '↓ Read more'}
+        </button>
+      )}
+
+      {/* Author */}
+      <div style={{ display:'flex', alignItems:'center', gap:'10px', marginTop:'14px', paddingTop:'14px', borderTop:'1px solid rgba(26,22,18,0.06)' }}>
+        {r.user_image ? (
+          <img src={r.user_image} alt={r.user_name} style={{ width:'32px', height:'32px', borderRadius:'50%', objectFit:'cover', flexShrink:0 }} />
+        ) : (
+          <div style={{ width:'32px', height:'32px', borderRadius:'50%', background:'rgba(42,157,143,0.12)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'13px', fontWeight:600, color:'#2a9d8f', flexShrink:0 }}>
+            {r.user_name?.[0]?.toUpperCase()}
+          </div>
+        )}
+        <div>
+          <p className="bf" style={{ color:'#1a1612', fontSize:'13px', fontWeight:600 }}>{r.user_name}</p>
+          <p className="bf" style={{ color:'rgba(26,22,18,0.38)', fontSize:'12px' }}>{r.destination?.split(',')[0]}</p>
+        </div>
+      </div>
+    </div>
+    </Reveal>
+  )
+}
+
 export default function HomePage() {
+  const [reviews, setReviews] = React.useState<any[]>([])
+  const [reviewsLoading, setReviewsLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    fetch('/api/reviews')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setReviews(data) })
+      .catch(() => {})
+      .finally(() => setReviewsLoading(false))
+  }, [])
+
   const [activeImg, setActiveImg] = useState(0)
   const [mounted, setMounted] = useState(false)
   const showNav = useScrollDirection()
@@ -224,7 +283,7 @@ export default function HomePage() {
           background:white; border-radius:20px; padding:28px;
           border:1px solid rgba(0,0,0,0.055);
           box-shadow:0 2px 12px rgba(0,0,0,0.04);
-          height:220px; display:flex; flex-direction:column; justify-content:space-between;
+          display:flex; flex-direction:column;
           transition:transform 0.3s ease, box-shadow 0.3s ease;
         }
         .tcard:hover { transform:translateY(-4px); box-shadow:0 16px 40px rgba(0,0,0,0.09); }
@@ -652,30 +711,20 @@ export default function HomePage() {
       </h2>
       </Reveal>
       
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'14px' }}>
-      {[
-        { q:'It planned Day 1 around my late flight. First AI that ever got that right.', name:'Kavya N.', dest:'Manali', emoji:'🏔️' },
-        { q:'Six people, completely different budgets. It balanced everyone without us even asking.', name:'Rohit M.', dest:'Goa', emoji:'🏖️' },
-        { q:'The low-energy mode gave us breathing room I didn\'t know I needed. Best trip I\'ve taken.', name:'Sneha P.', dest:'Bali', emoji:'🌴' },
-      ].map((t, i) => (
-        <Reveal key={i} delay={i * 0.1}>
-        <div className="tcard">
-        <p className="bf" style={{ color:'rgba(26,22,18,0.7)', fontSize:'14px', lineHeight:1.75, fontWeight:300, fontStyle:'italic', overflow:'hidden', display:'-webkit-box', WebkitLineClamp:4, WebkitBoxOrient:'vertical' }}>
-        "{t.q}"
-        </p>
-        <div style={{ display:'flex', alignItems:'center', gap:'10px', marginTop:'16px' }}>
-        <div style={{ width:'30px', height:'30px', borderRadius:'50%', background:'rgba(42,157,143,0.12)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px', flexShrink:0 }}>
-        {t.emoji}
+      {reviewsLoading ? (
+        <div style={{ textAlign:'center', padding:'40px 0', color:'rgba(26,22,18,0.3)', fontFamily:"'DM Sans',sans-serif", fontSize:'14px' }}>Loading reviews…</div>
+      ) : reviews.length === 0 ? (
+        <div style={{ textAlign:'center', padding:'40px 0' }}>
+          <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'14px', color:'rgba(26,22,18,0.4)', marginBottom:'8px' }}>No reviews yet — be the first!</p>
+          <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'13px', color:'rgba(26,22,18,0.3)' }}>Plan a trip and share your experience.</p>
         </div>
-        <div>
-        <p className="bf" style={{ color:'#1a1612', fontSize:'13px', fontWeight:600 }}>{t.name}</p>
-        <p className="bf" style={{ color:'rgba(26,22,18,0.38)', fontSize:'12px' }}>{t.dest}</p>
+      ) : (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px,1fr))', gap:'14px' }}>
+        {reviews.slice(0, 6).map((r, i) => (
+          <ReviewCard key={r.id} review={r} delay={i * 0.08} />
+        ))}
         </div>
-        </div>
-        </div>
-        </Reveal>
-      ))}
-      </div>
+      )}
       </div>
       </section>
       
