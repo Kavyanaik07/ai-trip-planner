@@ -234,7 +234,7 @@ async def chat(req: ChatRequest):
     currency = ctx.get("currency", "USD")
     symbol = CURRENCY_SYMBOLS.get(currency, "$")
 
-    prompt = f"""You are Wandr's friendly AI travel assistant.
+    prompt = f"""You are thisWay's friendly AI travel assistant.
 Trip: {ctx.get('destination')} | {ctx.get('startDate')} to {ctx.get('endDate')} | {ctx.get('travelers', 1)} traveler(s)
 Currency: {currency} ({symbol})
 
@@ -243,7 +243,12 @@ Conversation:
 
 User: {req.message}
 
-Reply helpfully and concisely. Use {currency} for any costs."""
+Reply helpfully and concisely. Use {currency} for any costs.
+Formatting rules — follow these exactly:
+- For bullet points, start the line with "- " (a dash and space). Never use asterisks (*) for bullets.
+- For bold text, wrap with **double asterisks** like **this**.
+- Keep the response short and conversational — this displays in a small chat panel.
+- No markdown headers (#), no triple backticks, no standalone asterisks."""
 
     try:
         response = client.models.generate_content(

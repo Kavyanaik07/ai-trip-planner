@@ -38,6 +38,73 @@ function Wordmark({ size = 22 }: { size?: number }) {
   )
 }
 
+// ── Chat message formatting helpers ───────────────────────────────────────
+function renderInline(text: string): React.ReactNode[] {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={i} style={{ fontWeight: 600, color: '#1a1612' }}>
+          {part.slice(2, -2)}
+        </strong>
+      )
+    }
+    return <span key={i}>{part}</span>
+  })
+}
+
+function formatChatMessage(text: string): React.ReactNode {
+  const lines = text.split('\n')
+  const elements: React.ReactNode[] = []
+  let i = 0
+
+  while (i < lines.length) {
+    const line = lines[i]
+    const isBullet = /^\s*[\*\-]\s+/.test(line)
+
+    if (isBullet) {
+      // Collect all consecutive bullet lines into one styled block
+      const bullets: string[] = []
+      while (i < lines.length && /^\s*[\*\-]\s+/.test(lines[i])) {
+        bullets.push(lines[i].replace(/^\s*[\*\-]\s+/, '').trim())
+        i++
+      }
+      elements.push(
+        <div
+          key={`bullets-${i}`}
+          style={{ display: 'flex', flexDirection: 'column', gap: '5px', margin: '4px 0' }}
+        >
+          {bullets.map((b, bi) => (
+            <div key={bi} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+              <span style={{ color: '#2a9d8f', flexShrink: 0, fontWeight: 700, lineHeight: '1.6', fontSize: '15px' }}>
+                ·
+              </span>
+              <span style={{ lineHeight: '1.6' }}>{renderInline(b)}</span>
+            </div>
+          ))}
+        </div>
+      )
+    } else if (line.trim() === '') {
+      elements.push(<div key={`gap-${i}`} style={{ height: '6px' }} />)
+      i++
+    } else {
+      elements.push(
+        <div key={`line-${i}`} style={{ lineHeight: '1.65' }}>
+          {renderInline(line)}
+        </div>
+      )
+      i++
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+      {elements}
+    </div>
+  )
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function TripPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
   const { data: session, status } = useSession()
@@ -353,7 +420,6 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
           scroll-margin-top: 80px;
         }
         
-        /* Watermark wrapper — clips only vertically, breaks out of container padding */
         .day-ordinal-wrap {
           position: absolute; top: 52px; right: -48px;
           height: 155px; 
@@ -361,7 +427,6 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
           pointer-events: none; user-select: none;
         }
         
-        /* Watermark ordinal */
         .day-ordinal {
           font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700;
           font-size: clamp(80px, 12vw, 150px);
@@ -558,7 +623,7 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
           )}
           {chatMessages.map((m, i) => (
             <div key={i} className={`${m.role === 'user' ? 'chat-msg-user' : 'chat-msg-ai'} chat-anim`}>
-            {m.content}
+              {m.role === 'assistant' ? formatChatMessage(m.content) : m.content}
             </div>
           ))}
           {chatLoading && (
@@ -826,7 +891,7 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
               className="day-section"
               ref={el => { dayRefs.current[di] = el }}
               >
-              {/* Watermark — wrapper clips bottom so it never overlaps cards */}
+              {/* Watermark */}
               <div className="day-ordinal-wrap">
               <span className="day-ordinal">{toRoman(di + 1)}</span>
               </div>
@@ -999,7 +1064,6 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
           </p>
           
           <div style={{ position: 'relative', zIndex: 1 }}>
-          {/* Teal rule divider */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', marginBottom: '28px' }}>
           <div style={{ width: '40px', height: '1px', background: 'rgba(42,157,143,0.35)' }} />
           <span className="bf" style={{ color: '#2a9d8f', fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 500 }}>
@@ -1047,4 +1111,3 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
         </div>
       )
     }
-    
