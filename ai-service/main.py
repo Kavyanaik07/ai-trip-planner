@@ -49,7 +49,6 @@ class ItineraryRequest(BaseModel):
     travelers: int = 1
     interests: List[str] = []
     travelStyle: Optional[str] = "balanced"
-    # Traveler context (Step 0)
     fromLocation: Optional[str] = None
     alreadyThere: Optional[bool] = False
     arrivalTime: Optional[str] = "unknown"
@@ -70,7 +69,6 @@ class ChatRequest(BaseModel):
 
 # ── Helpers ───────────────────────────────────────────────────────────────
 def get_dates_between(start: str, end: str) -> List[str]:
-    """Return list of date strings from start to end inclusive."""
     from datetime import date, timedelta
     s = datetime.strptime(start, "%Y-%m-%d").date()
     e = datetime.strptime(end, "%Y-%m-%d").date()
@@ -108,14 +106,10 @@ async def generate_itinerary(req: ItineraryRequest):
     symbol = CURRENCY_SYMBOLS.get(currency, "$")
     budget_str = f"{symbol}{req.budget:,.0f} {currency}" if req.budget else "flexible"
 
-    # Calculate exact dates
     dates = get_dates_between(req.startDate, req.endDate)
     total_days = len(dates)
-
-    # Build date entries for the prompt
     date_entries = "\n".join([f"  Day {i+1}: {d}" for i, d in enumerate(dates)])
 
-    # Build traveler context string
     if req.alreadyThere:
         travel_context = "Traveler is ALREADY at the destination. No travel day needed. Start activities from morning of Day 1."
     else:
@@ -198,7 +192,7 @@ Return ONLY valid JSON, no markdown, no extra text:
 
     try:
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash-lite",
             contents=prompt
         )
 
@@ -208,7 +202,6 @@ Return ONLY valid JSON, no markdown, no extra text:
 
         data = json.loads(raw)
 
-        # Enforce correct day count and dates server-side
         if "days" in data:
             data["days"] = data["days"][:total_days]
             for i, day in enumerate(data["days"]):
@@ -221,9 +214,15 @@ Return ONLY valid JSON, no markdown, no extra text:
         return data
 
     except Exception as e:
+        err_str = str(e)
+        if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+            return {
+                "error": "AI generation failed",
+                "details": "Quota exceeded. Please try again in a few minutes."
+            }
         return {
             "error": "AI generation failed",
-            "details": str(e)
+            "details": err_str
         }
 
 
@@ -248,15 +247,22 @@ Reply helpfully and concisely. Use {currency} for any costs."""
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash-lite",
             contents=prompt
         )
         return {
             "response": response.text,
             "itinerary_update": None
         }
+
     except Exception as e:
+        err_str = str(e)
+        if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+            return {
+                "response": "Quota exceeded. Please try again in a few minutes.",
+                "itinerary_update": None
+            }
         return {
             "response": "Sorry, something went wrong.",
-            "error": str(e)
+            "error": err_str
         }
