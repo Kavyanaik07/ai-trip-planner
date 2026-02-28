@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../app/generated/prisma"
 }
 
@@ -11,11 +8,11 @@ datasource db {
 }
 
 model User {
-  id         String      @id @default(uuid())
-  email      String      @unique
+  id         String    @id @default(uuid())
+  email      String    @unique
   name       String?
   image      String?
-  created_at DateTime    @default(now())
+  created_at DateTime  @default(now())
   trips      Trip[]
 
   @@map("users")
