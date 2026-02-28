@@ -6,7 +6,6 @@ import Link from 'next/link'
 // India-first — full vivid color, NO filter ever
 const SCENES = [
   {
-    // Honnavar, Karnataka — coastal river mouth, vivid greens, Arabian Sea
     img: 'https://images.unsplash.com/photo-1596895111956-bf1cf0599ce5?w=1400&q=90',
     city: 'Honnavar', country: 'Karnataka',
     caption: 'Where the river meets the sea',
@@ -28,7 +27,6 @@ const SCENES = [
   },
 ]
 
-// Exact wordmark from home page
 function Wordmark({ size = 24 }: { size?: number }) {
   return (
     <span style={{ display:'inline-flex', alignItems:'baseline', lineHeight:1, userSelect:'none' }}>
@@ -42,15 +40,15 @@ function Wordmark({ size = 24 }: { size?: number }) {
 type Stage = 'idle' | 'sending' | 'sent' | 'error'
 
 export default function SignInPage() {
-  const [activeImg, setActiveImg] = useState(0)
-  const [mounted, setMounted] = useState(false)
-  const [email, setEmail] = useState('')
-  const [stage, setStage] = useState<Stage>('idle')
+  const [activeImg, setActiveImg]   = useState(0)
+  const [mounted, setMounted]       = useState(false)
+  const [email, setEmail]           = useState('')
+  const [stage, setStage]           = useState<Stage>('idle')
   const [googleLoading, setGoogleLoading] = useState(false)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  // stageRef mirrors stage — used inside async handlers to prevent stale closure bugs
-  const stageRef = useRef<Stage>('idle')
-  const setStageSync = (s: Stage) => { stageRef.current = s; setStage(s) }
+
+  const timerRef  = useRef<ReturnType<typeof setInterval> | null>(null)
+  // AbortController replaces stageRef — avoids TS2367 stale-closure workaround
+  const abortRef  = useRef<AbortController | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -65,42 +63,34 @@ export default function SignInPage() {
     signIn('google', { callbackUrl: '/dashboard' })
   }
 
-  // ─── EMAIL: raw fetch to NextAuth endpoints ───────────────────────────────
-  // Why NOT signIn('email', {redirect:false}):
-  //   When the email provider isn't in providers[], NextAuth ignores redirect:false
-  //   and does a hard navigation to /api/auth/error. Unfixable at the JS level.
-  //
-  // Why raw fetch works:
-  //   We call the same endpoints signIn() uses internally, but we control the
-  //   request ourselves. No NextAuth router logic runs. No redirect possible.
-  //   The UI owns the state entirely.
-  //
-  // Email delivery (actually receiving the link) = .env config only:
-  //   EMAIL_SERVER=smtp://user:pass@smtp.example.com:587
-  //   EMAIL_FROM=ThisWay <hello@thiswayletsgo.com>
-  //   + a NextAuth database adapter (Supabase)
-  // ─────────────────────────────────────────────────────────────────────────
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault()
     e.stopPropagation()
     const trimmed = email.trim()
-    if (!trimmed || stageRef.current === 'sending') return
+    if (!trimmed || stage === 'sending') return
 
-    setStageSync('sending')
+    // Cancel any in-flight request
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
+    setStage('sending')
 
     try {
-      // Step 1: Get CSRF token — NextAuth requires this for all POST requests
-      const csrfRes = await fetch('/api/auth/csrf', { method: 'GET' })
+      // Step 1: Get CSRF token
+      const csrfRes = await fetch('/api/auth/csrf', {
+        method: 'GET',
+        signal: controller.signal,
+      })
       if (!csrfRes.ok) throw new Error('csrf_failed')
-      const { csrfToken } = await csrfRes.json()
+      const { csrfToken } = await csrfRes.json() as { csrfToken: string }
 
-      // Step 2: POST directly to the email signin endpoint
-      // 'json=true' in the body signals NextAuth to respond with JSON not redirect
-      const signinRes = await fetch('/api/auth/signin/email', {
+      // Step 2: POST to email signin endpoint
+      await fetch('/api/auth/signin/email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'X-Auth-Return-Redirect': '1',  // tells NextAuth to return redirect URL in JSON
+          'X-Auth-Return-Redirect': '1',
         },
         body: new URLSearchParams({
           email: trimmed,
@@ -108,26 +98,28 @@ export default function SignInPage() {
           callbackUrl: `${window.location.origin}/dashboard`,
           json: 'true',
         }).toString(),
-        redirect: 'manual',  // if for any reason fetch gets a redirect, don't follow it
+        redirect: 'manual',
+        signal: controller.signal,
       })
 
-      // Any 2xx or 3xx (manual redirect) = email was processed
-      // We show success regardless — actual delivery depends on .env config
-      // Only a network error (caught below) shows the error state
-      if (stageRef.current === 'sending') {
-        setStageSync('sent')
+      // If we reach here and weren't aborted → success
+      if (!controller.signal.aborted) {
+        setStage('sent')
         if (timerRef.current) clearInterval(timerRef.current)
       }
-    } catch (_e) {
-      if (stageRef.current === 'sending') {
-        setStageSync('error')
+    } catch (err: unknown) {
+      // AbortError means we intentionally cancelled — ignore it
+      if (err instanceof Error && err.name === 'AbortError') return
+      if (!controller.signal.aborted) {
+        setStage('error')
       }
     }
   }
 
   const reset = () => {
+    abortRef.current?.abort()
     setEmail('')
-    setStageSync('idle')
+    setStage('idle')
     timerRef.current = setInterval(() => setActiveImg(i => (i + 1) % SCENES.length), 5000)
   }
 
@@ -141,15 +133,12 @@ export default function SignInPage() {
         .bf { font-family:'DM Sans',sans-serif; }
         .hf { font-family:'Cormorant Garamond',Georgia,serif; }
 
-        /* ─── BACKGROUND — same crossfade as home page hero ─── */
         .bg-img {
           position:fixed; inset:0;
           background-size:cover; background-position:center;
           transition:opacity 1.4s ease;
-          /* ZERO filter — full saturation, full life */
         }
 
-        /* ─── GRADIENT — photo LEFT, warm canvas RIGHT where form sits ─── */
         .bg-overlay {
           position:fixed; inset:0;
           background: linear-gradient(
@@ -163,7 +152,6 @@ export default function SignInPage() {
           pointer-events:none;
         }
 
-        /* ─── ENTRANCE ─── */
         .fade-up {
           opacity:0; transform:translateY(20px);
           animation:fadeUp 0.75s cubic-bezier(0.16,1,0.3,1) forwards;
@@ -177,11 +165,9 @@ export default function SignInPage() {
         }
         .pop-in { animation:popIn 0.6s cubic-bezier(0.16,1,0.3,1) both; }
 
-        /* ─── CAPTION ─── */
         @keyframes captionUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
         .caption-up { animation:captionUp 0.55s cubic-bezier(0.16,1,0.3,1) both; }
 
-        /* ─── GOOGLE BTN — mirrors home page .cta style ─── */
         .google-btn {
           width:100%; display:flex; align-items:center; justify-content:center; gap:12px;
           padding:15px 22px; background:white;
@@ -194,7 +180,6 @@ export default function SignInPage() {
         .google-btn:active:not(:disabled) { transform:scale(0.98); }
         .google-btn:disabled { opacity:0.55; cursor:not-allowed; }
 
-        /* ─── EMAIL INPUT ─── */
         .email-input {
           width:100%; padding:15px 18px; background:white;
           border:1.5px solid rgba(0,0,0,0.1); border-radius:100px;
@@ -209,7 +194,6 @@ export default function SignInPage() {
           transform:translateY(-1px);
         }
 
-        /* ─── SUBMIT — exact .cta from home page ─── */
         .submit-btn {
           width:100%; padding:15px 22px;
           display:flex; align-items:center; justify-content:center; gap:8px;
@@ -223,21 +207,17 @@ export default function SignInPage() {
         .submit-btn:active:not(:disabled) { transform:scale(0.97); }
         .submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
 
-        /* ─── DIVIDER ─── */
         .divider { display:flex; align-items:center; gap:12px; margin:18px 0; }
         .dl { flex:1; height:1px; background:rgba(0,0,0,0.08); }
         .dt { font-family:'DM Sans',sans-serif; font-size:11px; color:rgba(26,22,18,0.32); letter-spacing:0.05em; }
 
-        /* ─── SPINNER ─── */
         @keyframes spin { to{transform:rotate(360deg);} }
         .sp  { width:17px;height:17px;border:2.5px solid rgba(255,255,255,0.25);border-top-color:white;border-radius:50%;animation:spin 0.65s linear infinite;flex-shrink:0; }
         .spd { width:16px;height:16px;border:2px solid rgba(26,22,18,0.12);border-top-color:#1a1612;border-radius:50%;animation:spin 0.65s linear infinite;flex-shrink:0; }
 
-        /* ─── DOTS — same as home page ─── */
         .dot { height:3px;border-radius:100px;background:rgba(255,255,255,0.35);border:none;cursor:pointer;padding:0;transition:all 0.35s ease; }
         .dot.on { background:white; }
 
-        /* ─── SUCCESS ─── */
         .success-box {
           background:white; border-radius:24px; padding:36px 28px; text-align:center;
           border:1px solid rgba(0,0,0,0.055);
@@ -250,17 +230,14 @@ export default function SignInPage() {
         }
         .emoji-in { display:inline-block; font-size:52px; margin-bottom:16px; animation:dropIn 0.65s cubic-bezier(0.34,1.56,0.64,1) both; }
 
-        /* ─── ERROR ─── */
         .error-box {
           background:rgba(251,191,36,0.06); border:1.5px solid rgba(251,191,36,0.22);
           border-radius:18px; padding:22px;
         }
 
-        /* ─── LEGAL LINK ─── */
         .leg { color:rgba(26,22,18,0.4); text-decoration:underline; text-underline-offset:2px; transition:color 0.2s; font-family:'DM Sans',sans-serif; }
         .leg:hover { color:rgba(26,22,18,0.65); }
 
-        /* ─── BACK LINK — top left over warm canvas ─── */
         .back {
           position:fixed; top:28px; left:36px; z-index:50;
           color:rgba(26,22,18,0.45); text-decoration:none; font-family:'DM Sans',sans-serif; font-size:13px;
@@ -278,13 +255,13 @@ export default function SignInPage() {
         }} />
       ))}
 
-      {/* ══ GRADIENT OVERLAY — photo shows left, form emerges right ══ */}
+      {/* ══ GRADIENT OVERLAY ══ */}
       <div className="bg-overlay" />
 
       {/* ══ BACK TO HOME ══ */}
       <Link href="/" className="back">← Home</Link>
 
-      {/* ══ DESTINATION INFO — bottom LEFT, over photo ══ */}
+      {/* ══ DESTINATION INFO — bottom LEFT ══ */}
       <div style={{ position:'fixed', bottom:32, left:36, zIndex:10, textAlign:'left' }} key={activeImg}>
         <div style={{ display:'flex', gap:'4px', marginBottom:'10px', justifyContent:'flex-start' }}>
           {SCENES.map((_,i) => (
@@ -301,7 +278,7 @@ export default function SignInPage() {
         </p>
       </div>
 
-      {/* ══ FORM — RIGHT side, content floats near center not edge ══ */}
+      {/* ══ FORM — RIGHT side ══ */}
       <div style={{
         position:'relative', zIndex:20,
         marginLeft:'50%',
@@ -321,7 +298,6 @@ export default function SignInPage() {
         {/* ── IDLE / SENDING ── */}
         {(stage === 'idle' || stage === 'sending') && (
           <>
-            {/* Heading */}
             <div className="fade-up" style={{ animationDelay:'0.14s', marginBottom:'36px' }}>
               <h1 className="hf" style={{
                 fontSize:'clamp(36px,4vw,52px)', fontWeight:700,
@@ -371,18 +347,19 @@ export default function SignInPage() {
                 disabled={stage==='sending'}
               />
               <button type="submit" disabled={stage==='sending' || !email.trim()} className="submit-btn">
-                {stage==='sending' ? <><div className="sp"/>Sending…</> : <>Send login link <span style={{ transition:'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)', display:'inline-block' }}>→</span></>}
+                {stage==='sending'
+                  ? <><div className="sp"/>Sending…</>
+                  : <>Send login link <span style={{ transition:'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)', display:'inline-block' }}>→</span></>
+                }
               </button>
               <p className="bf" style={{ color:'rgba(26,22,18,0.3)', fontSize:'12px', textAlign:'center', marginTop:'2px' }}>
                 No password needed. One click and you're in.
               </p>
             </form>
-
-
           </>
         )}
 
-        {/* ── SENT — permanent, user-controlled only ── */}
+        {/* ── SENT ── */}
         {stage === 'sent' && (
           <div className="success-box pop-in">
             <div className="emoji-in">📬</div>
@@ -405,7 +382,7 @@ export default function SignInPage() {
           </div>
         )}
 
-        {/* ── ERROR — network/config issue, honest ── */}
+        {/* ── ERROR ── */}
         {stage === 'error' && (
           <div className="error-box pop-in">
             <p className="bf" style={{ color:'#92400e', fontSize:'14px', fontWeight:500, marginBottom:'8px' }}>
