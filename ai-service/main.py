@@ -161,6 +161,13 @@ STRICT RULES — you MUST follow all of these:
 6. Each day: activities only between 07:00 and 22:00 local time. Allow meal breaks.
 7. If budget is low, include free activities, street food, and public transport.
 8. Add small human notes like "We kept this day lighter so you don't burn out" when relevant.
+9. LOCATION FIELD RULES (critical for map display):
+   - "location" must be a SHORT, REAL place name that exists on a map (1–5 words max).
+   - GOOD: "Cable Beach", "Broome International Airport", "Chinatown Broome", "Town Beach"
+   - BAD: "Restaurant at Cable Beach", "Departing from Broome Airport", "Town Beach or Chinatown"
+   - Never use "or", "and", "to", "departing from", "starting at", "located at" in location.
+   - Never combine two places in one location field — pick the single most specific place.
+   - If the activity has no fixed location (e.g. a cooking class at the hotel), use the hotel/venue name.
 
 Return ONLY valid JSON, no markdown, no extra text:
 {{
@@ -178,7 +185,7 @@ Return ONLY valid JSON, no markdown, no extra text:
         {{
           "title": "Activity name",
           "description": "2-3 sentence description",
-          "location": "Specific place name",
+          "location": "Specific place name, max 5 words, no conjunctions",
           "start_time": "09:00",
           "end_time": "11:00",
           "category": "attraction",
